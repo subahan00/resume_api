@@ -3,9 +3,9 @@
   "info": {
     "title": "ATS Resume Scoring API",
     "version": "1.0.0",
-    "description": "A robust API that evaluates resumes against job descriptions using keyword matching, NLP techniques, and heuristic scoring. Supports both raw text input and PDF file uploads.",
+    "description": "This API helps developers build Applicant Tracking Systems (ATS) by providing tools to score resumes against job descriptions.\n\n### Key Features:\n- **Text Analysis**: Compares raw resume text against job descriptions.\n- **PDF Parsing**: Upload PDF resumes directly for analysis.\n- **Keyword Matching**: Identifies missing and matching keywords to calculate a relevance score.\n\nUse this API to automate the initial screening process for recruitment platforms.",
     "contact": {
-      "name": "API Support",
+      "name": "API Support Team",
       "email": "support@example.com"
     },
     "license": {
@@ -22,15 +22,15 @@
   "tags": [
     {
       "name": "Scoring",
-      "description": "Endpoints for calculating ATS scores"
+      "description": "Core endpoints for analyzing and scoring resumes."
     }
   ],
   "paths": {
     "/api/ats/score": {
       "post": {
         "tags": ["Scoring"],
-        "summary": "Score raw resume text",
-        "description": "Computes a match score based on plain text input for both the resume and the job description.",
+        "summary": "Score Resume (Raw Text)",
+        "description": "Analyzes plain text from a resume and compares it against a job description to calculate a match score. Ideal for scenarios where text is already extracted.",
         "operationId": "scoreRawText",
         "requestBody": {
           "required": true,
@@ -42,21 +42,21 @@
                 "properties": {
                   "resumeText": {
                     "type": "string",
-                    "description": "The full text content of the resume.",
-                    "example": "Senior Software Engineer with 5 years of experience in Node.js and React..."
+                    "description": "The complete text content extracted from the candidate's resume.",
+                    "example": "Senior Software Engineer with 5 years of experience in Node.js, React, and Cloud Architecture..."
                   },
                   "jobText": {
                     "type": "string",
-                    "description": "The full text content of the job description.",
-                    "example": "We are looking for a Node.js developer with experience in microservices..."
+                    "description": "The complete text content of the job posting or description.",
+                    "example": "We are looking for a Node.js developer with experience in microservices and cloud platforms..."
                   },
                   "jobKeywords": {
                     "type": "array",
-                    "description": "Optional list of specific keywords to target. If omitted, keywords are extracted from jobText.",
+                    "description": "A specific list of mandatory skills or keywords. If provided, the score will be based on these instead of extracting keywords from 'jobText'.",
                     "items": {
                       "type": "string"
                     },
-                    "example": ["Node.js", "React", "Microservices"]
+                    "example": ["Node.js", "React", "Microservices", "AWS"]
                   }
                 }
               }
@@ -65,7 +65,7 @@
         },
         "responses": {
           "200": {
-            "description": "Score calculated successfully",
+            "description": "Analysis complete. Returns score and keyword details.",
             "content": {
               "application/json": {
                 "schema": {
@@ -75,7 +75,7 @@
             }
           },
           "400": {
-            "description": "Bad Request - Missing resumeText",
+            "description": "Validation Error - 'resumeText' is missing.",
             "content": {
               "application/json": {
                 "schema": {
@@ -85,7 +85,7 @@
             }
           },
           "500": {
-            "description": "Server Error",
+            "description": "Internal Server Error",
             "content": {
               "application/json": {
                 "schema": {
@@ -100,8 +100,8 @@
     "/api/ats/score/file": {
       "post": {
         "tags": ["Scoring"],
-        "summary": "Upload PDF resume and score",
-        "description": "Uploads a PDF resume, extracts the text, and compares it against the provided job description or keywords.",
+        "summary": "Score Resume (PDF Upload)",
+        "description": "Uploads a PDF resume file, extracts its text automatically, and compares it against a job description. Use this for direct file handling from frontend forms.",
         "operationId": "scorePdfFile",
         "requestBody": {
           "required": true,
@@ -114,7 +114,7 @@
                   "resume": {
                     "type": "string",
                     "format": "binary",
-                    "description": "The resume file (PDF format required)."
+                    "description": "The resume file to analyze. Currently supports **PDF** format only."
                   },
                   "jobText": {
                     "type": "string",
@@ -122,7 +122,7 @@
                   },
                   "jobKeywords": {
                     "type": "string",
-                    "description": "JSON stringified array of keywords (e.g. '[\"React\", \"Node\"]') or simple text."
+                    "description": "A JSON string representing an array of keywords (e.g., '[\"React\", \"Node\"]'). This allows sending complex data in a multipart form."
                   }
                 }
               }
@@ -131,7 +131,7 @@
         },
         "responses": {
           "200": {
-            "description": "Score calculated successfully",
+            "description": "File parsed and analyzed successfully.",
             "content": {
               "application/json": {
                 "schema": {
@@ -141,7 +141,7 @@
             }
           },
           "400": {
-            "description": "Bad Request - Missing file",
+            "description": "Validation Error - File is missing or invalid format.",
             "content": {
               "application/json": {
                 "schema": {
@@ -151,7 +151,7 @@
             }
           },
           "500": {
-            "description": "Server Error - Parsing or scoring failed",
+            "description": "Server Error - Failed to parse PDF or calculate score.",
             "content": {
               "application/json": {
                 "schema": {
@@ -168,46 +168,50 @@
     "schemas": {
       "ScoreResult": {
         "type": "object",
+        "title": "Score Analysis Result",
+        "description": "The detailed breakdown of the compatibility between the resume and job description.",
         "properties": {
           "score": {
             "type": "integer",
-            "description": "The match percentage (0-100).",
+            "description": "The overall compatibility score (0-100).",
             "example": 85
           },
           "totalKeywords": {
             "type": "integer",
-            "description": "Total number of keywords identified in the job description.",
+            "description": "The total count of significant keywords identified in the job description.",
             "example": 20
           },
           "matchedCount": {
             "type": "integer",
-            "description": "Number of keywords found in the resume.",
+            "description": "The number of keywords found in the resume.",
             "example": 17
           },
           "matchedKeywords": {
             "type": "array",
             "items": { "type": "string" },
-            "description": "List of keywords present in both documents.",
+            "description": "List of keywords that successfully matched.",
             "example": ["Node.js", "React"]
           },
           "missingKeywords": {
             "type": "array",
             "items": { "type": "string" },
-            "description": "List of keywords present in job description but missing from resume.",
+            "description": "List of keywords present in the job description but missing from the resume.",
             "example": ["AWS", "Docker"]
           },
           "matchDetails": {
             "type": "string",
-            "description": "Optional message if no match could be performed.",
-            "example": "No job content provided to match against."
+            "description": "Additional context or warnings (e.g., if no job content was provided).",
+            "example": "Analysis successful."
           }
         }
       },
       "Error": {
         "type": "object",
+        "title": "Error Response",
         "properties": {
           "error": {
             "type": "string",
+            "description": "A descriptive error message explaining what went wrong.",
             "example": "resumeText required"
           }
         }
